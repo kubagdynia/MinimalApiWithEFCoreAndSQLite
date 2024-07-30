@@ -1,13 +1,27 @@
 using Microsoft.EntityFrameworkCore;
 using Api;
 using Api.Data;
+using Api.Options;
+using Microsoft.Extensions.Options;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services
     .AddEndpointsApiExplorer()
     .AddSwaggerGen(options => options.CustomSchemaIds(t => t.FullName?.Replace('+', '.')))
-    .AddDbContext<DataContext>(opt => opt.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
+    .ConfigureOptions<DatabaseOptionsSetup>()
+    .AddDbContext<DataContext>(
+        (serviceProvider, dbContextOptionsBuilder) =>
+        {
+            var databaseOptions = serviceProvider.GetRequiredService<IOptions<DatabaseOptions>>().Value;
+            dbContextOptionsBuilder.UseSqlite(databaseOptions.ConnectionString,
+                optionsBuilder =>
+                {
+                    optionsBuilder.CommandTimeout(databaseOptions.CommandTimeout);
+                });
+            dbContextOptionsBuilder.EnableDetailedErrors(databaseOptions.EnableDetailedErrors);
+            dbContextOptionsBuilder.EnableSensitiveDataLogging(databaseOptions.EnableSensitiveDataLogging);
+        });
     
 var app = builder.Build();
 
