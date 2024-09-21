@@ -1,4 +1,5 @@
 using Api.Data;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.EntityFrameworkCore;
 
 namespace Api;
@@ -36,7 +37,8 @@ public static class RpgEndpoints
                 await dataContext.SaveChangesAsync();
                 return Results.Created($"/api/rpgCharacters/{rpgCharacter.Id}", rpgCharacter);
             })
-            .WithSummary("Creates a new RpgCharacter");
+            .WithSummary("Creates a new RpgCharacter")
+            .Produces<Created>(StatusCodes.Status201Created);
     }
 
     private static void GetAllRpgCharacters(RouteGroupBuilder rpgCharacterRoute)
@@ -44,7 +46,8 @@ public static class RpgEndpoints
         // GET /api/rpgCharacters
         rpgCharacterRoute.MapGet("",
                 async (DataContext dataContext) => Results.Ok(await dataContext.RpgCharacters.ToListAsync()))
-            .WithSummary("Gets all RpgCharacters");
+            .WithSummary("Gets all RpgCharacters")
+            .Produces<Ok>();
     }
 
     private static void GetRpgCharacter(RouteGroupBuilder rpgCharacterRoute)
@@ -55,7 +58,9 @@ public static class RpgEndpoints
                 var rpgCharacter = await dataContext.RpgCharacters.FindAsync(id);
                 return rpgCharacter is null ? Results.NotFound() : Results.Ok(rpgCharacter);
             })
-            .WithSummary("Gets a specific RpgCharacter");
+            .WithSummary("Gets a specific RpgCharacter")
+            .Produces<Ok>()
+            .Produces<NotFound>(StatusCodes.Status404NotFound);
     }
 
     private static void UpdateRpgCharacter(RouteGroupBuilder rpgCharacterRoute)
@@ -86,7 +91,10 @@ public static class RpgEndpoints
 
                 return Results.NoContent();
             })
-            .WithSummary("Updates a specific RpgCharacter");
+            .WithSummary("Updates a specific RpgCharacter")
+            .Produces<NoContent>(StatusCodes.Status204NoContent)
+            .Produces<NotFound>(StatusCodes.Status400BadRequest)
+            .Produces<NotFound>(StatusCodes.Status404NotFound);
     }
 
     private static void DeleteRpgCharacter(RouteGroupBuilder rpgCharacterRoute)
@@ -105,6 +113,8 @@ public static class RpgEndpoints
         
                 return Results.NoContent();
             })
-            .WithSummary("Deletes a specific RpgCharacter");
+            .WithSummary("Deletes a specific RpgCharacter")
+            .Produces<NoContent>(StatusCodes.Status204NoContent)
+            .Produces<NotFound>(StatusCodes.Status404NotFound);
     }
 }
