@@ -5,14 +5,9 @@ using Microsoft.Extensions.Options;
 
 namespace Api.Data;
 
-public class DataContext : DbContext
+public class DataContext(DbContextOptions<DataContext> options, IOptions<DatabaseOptions> opt) : DbContext(options)
 {
-    private readonly DatabaseOptions _databaseOptions;
-
-    public DataContext(DbContextOptions<DataContext> options, IOptions<DatabaseOptions> opt) : base(options)
-    {
-        _databaseOptions = opt.Value;
-    }
+    private readonly DatabaseOptions _databaseOptions = opt.Value;
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
@@ -27,7 +22,7 @@ public class DataContext : DbContext
         if (_databaseOptions.LogToDebugWriteLine)
         {
             optionsBuilder.LogTo(message =>
-                Debug.WriteLine(message), new[] { DbLoggerCategory.Database.Command.Name }, LogLevel.Information);
+                Debug.WriteLine(message), [DbLoggerCategory.Database.Command.Name], LogLevel.Information);
         }
     }
 
